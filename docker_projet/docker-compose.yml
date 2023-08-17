@@ -1,0 +1,71 @@
+version: "3.8"
+services:
+#Conteneur de la base mongoDB 
+  mongodb:
+    image : mongo:5.0
+    container_name: base_mongodb
+    volumes:
+      - ./projet_data:/data/db
+    ports:
+      - 27017:27017
+  #Conteneur ETL venant enrichir la base mongoDB en données provenant des différentes api du NY times
+  etl:
+    image : raphadu94/etl:latest
+    container_name: etl
+    ports:
+      - 10000:10000
+    depends_on: 
+      - mongodb
+    environment:
+      ADDRESSIP: "34.251.16.165" # adresse ip de sa machine virtuelle
+    volumes:
+      -  ~/docker_projet:/home/check
+  
+  #Conteneur ETL en streaming venant enrichir une des collections de la base de données périodiquement
+  etl_streaming:
+    image: raphadu94/spark:latest
+    container_name: etl_streaming
+    ports:
+      - 10001:10001
+    depends_on:
+      - etl
+    environment:
+      ADDRESSIP: "34.251.16.165" # adresse ip de sa machine virtuelle
+    volumes:
+      -  ~/docker_projet:/home/check
+    
+    
+  #Conteneur de l'api  
+  api:
+    image: raphadu94/api:latest
+    container_name: api
+    ports:
+      - 10002:10002
+    depends_on:
+      - mongodb
+    environment:
+      ADDRESSIP: "34.251.16.165" # adresse ip de sa machine virtuelle
+    volumes:
+      -  ~/docker_projet:/home/check
+  
+  #Conteneur du Dash
+  dash:
+    image: raphadu94/dash:latest
+    container_name: dash
+    ports:
+      - 10003:10003
+    depends_on:
+      - api
+    environment:
+      ADDRESSIP: "34.251.16.165" # adresse ip de sa machine virtuelle
+    volumes:
+      -  ~/docker_projet:/home/check
+
+
+
+
+
+
+    
+
+  
